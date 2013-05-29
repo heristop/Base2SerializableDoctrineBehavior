@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Base2Serializable Listener
+ * GlueSerializable Listener
  *
  * @subpackage  Listener
  * @author Alexandre Mogère
  */
-class Doctrine_Template_Listener_Base2Serializable extends Doctrine_Template_Listener_Serializable
+class Doctrine_Template_Listener_GlueSerializable extends Doctrine_Template_Listener_Serializable
 {
   /**
    * Normalizes relationship(s) 
@@ -17,30 +17,18 @@ class Doctrine_Template_Listener_Base2Serializable extends Doctrine_Template_Lis
    */
   protected function normalize($objects, $filter)
   {
-    $relations = $this->_options['relations'];
-    
-    // transforms base2 value to array
+    // transforms serialized values to array
     $matches = array();
     foreach ($objects as $result)
     {
-      $primaryKey = isset($relation['primary_key']) ? $relation['primary_key'] : 'id';
-      
-      // if related table contains a column with filter 
-      if (isset($relation['column_filter']))
+      if (is_string($filter))
       {
-        $result['code_filter'] = $result[$relation['column_filter']];
-      }
-      // computes the filter from primary key
-      else
-      {
-        $result['code_filter'] = pow(2, (int) $result[$primaryKey]);
-      }
-    
-      // checks if primary key is present in filter
-      if (((int) $filter & (int) $result['code_filter']) != 0)
-      {
-        // builds an array composed of primary keys
-        array_push($matches, $result[$primaryKey]);
+        $filter = explode($this->_options['separator'], $filter);
+        if (!empty($filter))
+        foreach ($filter as $value)
+        {
+          array_push($matches, (int) $value);
+        }
       }
     }
     
@@ -85,15 +73,15 @@ class Doctrine_Template_Listener_Base2Serializable extends Doctrine_Template_Lis
   {
     sort($ids);
     
-    $binary = 0;
+    $value = array();
     foreach ($ids as $id)
     {
-      if ("" === $id) continue;
+      if ((int) $id == 0) continue;
       
-      $binary = $binary + pow(2, (int) $id);
+      array_push($value, (int) $id);
     }
-
-    return $binary;
+    
+    return implode($this->_options['separator'], $value);
   }
   
 }
